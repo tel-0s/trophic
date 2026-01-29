@@ -93,8 +93,8 @@ public class TrophicConfig {
         /** Penalty multiplier for targets in opposite direction (default: 2.0) */
         public double oppositeDirectionPenalty = 2.0;
         
-        /** Default search range for prey in blocks (default: 32) */
-        public double defaultSearchRange = 32.0;
+        /** Default search range for prey in blocks (default: 64) */
+        public double defaultSearchRange = 64.0;
         
         /** Stalk speed as multiplier of chase speed (default: 0.6) */
         public double stalkSpeedMultiplier = 0.6;
@@ -137,7 +137,7 @@ public class TrophicConfig {
         public int breedDuration = 60;
         
         /** Cooldown after breeding for herbivores in ticks (default: 24000 = 1 in-game day) */
-        public int cooldownTicks = 24000;
+        public int cooldownTicks = 12000;
         
         /** Cooldown multiplier for predators (default: 3 = 3 days) */
         public int predatorCooldownMultiplier = 3;

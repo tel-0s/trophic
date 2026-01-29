@@ -1,5 +1,6 @@
 package com.trophic;
 
+import com.trophic.command.TrophicCommands;
 import com.trophic.config.TrophicConfig;
 import com.trophic.ecosystem.EcosystemManager;
 import com.trophic.population.PopulationTracker;
@@ -52,6 +53,9 @@ public class Trophic implements ModInitializer {
 
         // Load species definitions from datapacks
         speciesRegistry.loadDefaultSpecies();
+
+        // Register commands
+        TrophicCommands.register();
 
         // Register event handlers
         registerEvents();

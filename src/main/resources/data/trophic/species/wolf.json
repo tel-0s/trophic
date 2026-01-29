@@ -8,7 +8,7 @@
       "minecraft:sheep": { "preference": 0.3, "nutritional_value": 150 },
       "minecraft:chicken": { "preference": 0.2, "nutritional_value": 60 }
     },
-    "hunt_cooldown": 6000
+    "hunt_cooldown": 3000
   },
   "habitat": {
     "preferred_biomes": ["minecraft:forest", "minecraft:taiga", "minecraft:old_growth_pine_taiga", "minecraft:old_growth_spruce_taiga", "minecraft:plains"],

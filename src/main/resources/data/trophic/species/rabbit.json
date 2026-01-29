@@ -16,7 +16,7 @@
     "litter_size": { "min": 2, "max": 4 },
     "gestation_ticks": 12000,
     "maturity_age_ticks": 24000,
-    "food_threshold": 0.7
+    "food_threshold": 0.8
   },
   "social": {
     "pack_animal": false,
