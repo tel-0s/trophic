@@ -1,0 +1,32 @@
+{
+  "entity": "minecraft:pig",
+  "trophic_level": 2,
+  "diet": {
+    "type": "omnivore",
+    "prey": {},
+    "hunt_cooldown": 0
+  },
+  "habitat": {
+    "preferred_biomes": ["minecraft:plains", "minecraft:forest", "minecraft:birch_forest", "minecraft:meadow"],
+    "temperature_tolerance": { "min": 5, "max": 30 },
+    "avoids": ["minecraft:desert", "minecraft:snowy_plains", "minecraft:jungle"]
+  },
+  "reproduction": {
+    "breeding_season": { "start": 0.15, "end": 0.55 },
+    "litter_size": { "min": 1, "max": 2 },
+    "gestation_ticks": 18000,
+    "maturity_age_ticks": 36000,
+    "food_threshold": 0.7
+  },
+  "social": {
+    "pack_animal": true,
+    "pack_size": { "min": 2, "max": 6 },
+    "territory_radius": 24,
+    "aggression": 0.15
+  },
+  "population": {
+    "base_density": 1.2,
+    "carrying_capacity_per_chunk": 5,
+    "migration_tendency": 0.1
+  }
+}

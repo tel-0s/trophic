@@ -1,0 +1,32 @@
+{
+  "entity": "minecraft:chicken",
+  "trophic_level": 2,
+  "diet": {
+    "type": "omnivore",
+    "prey": {},
+    "hunt_cooldown": 0
+  },
+  "habitat": {
+    "preferred_biomes": ["minecraft:plains", "minecraft:forest", "minecraft:birch_forest", "minecraft:meadow", "minecraft:jungle"],
+    "temperature_tolerance": { "min": 10, "max": 40 },
+    "avoids": ["minecraft:snowy_plains", "minecraft:snowy_taiga", "minecraft:desert"]
+  },
+  "reproduction": {
+    "breeding_season": { "start": 0.1, "end": 0.7 },
+    "litter_size": { "min": 1, "max": 1 },
+    "gestation_ticks": 12000,
+    "maturity_age_ticks": 24000,
+    "food_threshold": 0.7
+  },
+  "social": {
+    "pack_animal": true,
+    "pack_size": { "min": 2, "max": 8 },
+    "territory_radius": 16,
+    "aggression": 0.0
+  },
+  "population": {
+    "base_density": 2.0,
+    "carrying_capacity_per_chunk": 10,
+    "migration_tendency": 0.05
+  }
+}

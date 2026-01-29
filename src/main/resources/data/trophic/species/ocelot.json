@@ -1,0 +1,35 @@
+{
+  "entity": "minecraft:ocelot",
+  "trophic_level": 3,
+  "diet": {
+    "type": "carnivore",
+    "prey": {
+      "minecraft:chicken": { "preference": 0.7, "nutritional_value": 80 },
+      "minecraft:rabbit": { "preference": 0.3, "nutritional_value": 100 }
+    },
+    "hunt_cooldown": 4000
+  },
+  "habitat": {
+    "preferred_biomes": ["minecraft:jungle", "minecraft:bamboo_jungle", "minecraft:sparse_jungle"],
+    "temperature_tolerance": { "min": 15, "max": 45 },
+    "avoids": ["minecraft:snowy_plains", "minecraft:taiga", "minecraft:desert"]
+  },
+  "reproduction": {
+    "breeding_season": { "start": 0.0, "end": 1.0 },
+    "litter_size": { "min": 1, "max": 2 },
+    "gestation_ticks": 24000,
+    "maturity_age_ticks": 48000,
+    "food_threshold": 0.8
+  },
+  "social": {
+    "pack_animal": false,
+    "pack_size": { "min": 1, "max": 1 },
+    "territory_radius": 64,
+    "aggression": 0.5
+  },
+  "population": {
+    "base_density": 0.3,
+    "carrying_capacity_per_chunk": 2,
+    "migration_tendency": 0.1
+  }
+}

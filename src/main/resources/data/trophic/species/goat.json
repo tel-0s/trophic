@@ -1,0 +1,32 @@
+{
+  "entity": "minecraft:goat",
+  "trophic_level": 2,
+  "diet": {
+    "type": "herbivore",
+    "prey": {},
+    "hunt_cooldown": 0
+  },
+  "habitat": {
+    "preferred_biomes": ["minecraft:jagged_peaks", "minecraft:frozen_peaks", "minecraft:stony_peaks", "minecraft:snowy_slopes", "minecraft:meadow", "minecraft:grove"],
+    "temperature_tolerance": { "min": -20, "max": 20 },
+    "avoids": ["minecraft:desert", "minecraft:jungle", "minecraft:swamp"]
+  },
+  "reproduction": {
+    "breeding_season": { "start": 0.6, "end": 0.85 },
+    "litter_size": { "min": 1, "max": 2 },
+    "gestation_ticks": 30000,
+    "maturity_age_ticks": 60000,
+    "food_threshold": 0.5
+  },
+  "social": {
+    "pack_animal": true,
+    "pack_size": { "min": 2, "max": 6 },
+    "territory_radius": 48,
+    "aggression": 0.4
+  },
+  "population": {
+    "base_density": 0.8,
+    "carrying_capacity_per_chunk": 4,
+    "migration_tendency": 0.25
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "entity": "minecraft:sheep",
+  "trophic_level": 2,
+  "diet": {
+    "type": "herbivore",
+    "prey": {},
+    "hunt_cooldown": 0
+  },
+  "habitat": {
+    "preferred_biomes": ["minecraft:plains", "minecraft:meadow", "minecraft:savanna", "minecraft:forest"],
+    "temperature_tolerance": { "min": -5, "max": 35 },
+    "avoids": ["minecraft:desert", "minecraft:jungle", "minecraft:swamp"]
+  },
+  "reproduction": {
+    "breeding_season": { "start": 0.15, "end": 0.45 },
+    "litter_size": { "min": 1, "max": 2 },
+    "gestation_ticks": 24000,
+    "maturity_age_ticks": 48000,
+    "food_threshold": 0.75
+  },
+  "social": {
+    "pack_animal": true,
+    "pack_size": { "min": 4, "max": 12 },
+    "territory_radius": 32,
+    "aggression": 0.1
+  },
+  "population": {
+    "base_density": 1.5,
+    "carrying_capacity_per_chunk": 6,
+    "migration_tendency": 0.2
+  }
+}

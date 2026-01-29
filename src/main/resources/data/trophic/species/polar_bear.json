@@ -1,0 +1,35 @@
+{
+  "entity": "minecraft:polar_bear",
+  "trophic_level": 3,
+  "diet": {
+    "type": "carnivore",
+    "prey": {
+      "minecraft:cod": { "preference": 0.5, "nutritional_value": 25 },
+      "minecraft:salmon": { "preference": 0.5, "nutritional_value": 30 }
+    },
+    "hunt_cooldown": 8000
+  },
+  "habitat": {
+    "preferred_biomes": ["minecraft:snowy_plains", "minecraft:ice_spikes", "minecraft:frozen_ocean", "minecraft:frozen_river"],
+    "temperature_tolerance": { "min": -30, "max": 5 },
+    "avoids": ["minecraft:desert", "minecraft:jungle", "minecraft:savanna"]
+  },
+  "reproduction": {
+    "breeding_season": { "start": 0.8, "end": 0.95 },
+    "litter_size": { "min": 1, "max": 2 },
+    "gestation_ticks": 48000,
+    "maturity_age_ticks": 96000,
+    "food_threshold": 0.7
+  },
+  "social": {
+    "pack_animal": false,
+    "pack_size": { "min": 1, "max": 2 },
+    "territory_radius": 96,
+    "aggression": 0.8
+  },
+  "population": {
+    "base_density": 0.2,
+    "carrying_capacity_per_chunk": 1,
+    "migration_tendency": 0.4
+  }
+}

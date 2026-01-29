@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "trophic",
+  "version": "${version}",
+  "name": "Trophic",
+  "description": "A Minecraft mod that overhauls animal behaviour and interactions, introducing a complex ecological system with predator-prey relationships, food chains, and ecosystem dynamics.",
+  "authors": [
+    "Trophic Team"
+  ],
+  "contact": {
+    "homepage": "https://github.com/ethee/trophic",
+    "sources": "https://github.com/ethee/trophic"
+  },
+  "license": "MIT",
+  "icon": "assets/trophic/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.trophic.Trophic"
+    ],
+    "client": [
+      "com.trophic.TrophicClient"
+    ]
+  },
+  "mixins": [
+    "trophic.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.2",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

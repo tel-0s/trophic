@@ -1,0 +1,36 @@
+{
+  "entity": "minecraft:wolf",
+  "trophic_level": 3,
+  "diet": {
+    "type": "carnivore",
+    "prey": {
+      "minecraft:rabbit": { "preference": 0.5, "nutritional_value": 80 },
+      "minecraft:sheep": { "preference": 0.3, "nutritional_value": 150 },
+      "minecraft:chicken": { "preference": 0.2, "nutritional_value": 60 }
+    },
+    "hunt_cooldown": 6000
+  },
+  "habitat": {
+    "preferred_biomes": ["minecraft:forest", "minecraft:taiga", "minecraft:old_growth_pine_taiga", "minecraft:old_growth_spruce_taiga", "minecraft:plains"],
+    "temperature_tolerance": { "min": -15, "max": 25 },
+    "avoids": ["minecraft:desert", "minecraft:badlands"]
+  },
+  "reproduction": {
+    "breeding_season": { "start": 0.15, "end": 0.35 },
+    "litter_size": { "min": 1, "max": 2 },
+    "gestation_ticks": 24000,
+    "maturity_age_ticks": 48000,
+    "food_threshold": 0.85
+  },
+  "social": {
+    "pack_animal": true,
+    "pack_size": { "min": 3, "max": 8 },
+    "territory_radius": 64,
+    "aggression": 0.7
+  },
+  "population": {
+    "base_density": 0.5,
+    "carrying_capacity_per_chunk": 2,
+    "migration_tendency": 0.3
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "entity": "minecraft:fox",
+  "trophic_level": 3,
+  "diet": {
+    "type": "omnivore",
+    "prey": {
+      "minecraft:rabbit": { "preference": 0.6, "nutritional_value": 100 },
+      "minecraft:chicken": { "preference": 0.4, "nutritional_value": 80 }
+    },
+    "hunt_cooldown": 4800
+  },
+  "habitat": {
+    "preferred_biomes": ["minecraft:taiga", "minecraft:old_growth_pine_taiga", "minecraft:old_growth_spruce_taiga", "minecraft:snowy_taiga", "minecraft:grove"],
+    "temperature_tolerance": { "min": -20, "max": 20 },
+    "avoids": ["minecraft:desert", "minecraft:jungle"]
+  },
+  "reproduction": {
+    "breeding_season": { "start": 0.0, "end": 0.25 },
+    "litter_size": { "min": 1, "max": 2 },
+    "gestation_ticks": 20000,
+    "maturity_age_ticks": 36000,
+    "food_threshold": 0.8
+  },
+  "social": {
+    "pack_animal": false,
+    "pack_size": { "min": 1, "max": 2 },
+    "territory_radius": 48,
+    "aggression": 0.3
+  },
+  "population": {
+    "base_density": 0.6,
+    "carrying_capacity_per_chunk": 3,
+    "migration_tendency": 0.2
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "package": "com.trophic.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MixinAnimalEntity",
+    "MixinLivingEntity",
+    "MixinWolfEntity",
+    "MixinFoxEntity",
+    "MixinRabbitEntity",
+    "MixinSheepEntity",
+    "MixinChickenEntity",
+    "MixinCowEntity",
+    "MixinPigEntity",
+    "MixinOcelotEntity"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

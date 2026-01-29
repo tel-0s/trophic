@@ -1,0 +1,32 @@
+{
+  "entity": "minecraft:rabbit",
+  "trophic_level": 2,
+  "diet": {
+    "type": "herbivore",
+    "prey": {},
+    "hunt_cooldown": 0
+  },
+  "habitat": {
+    "preferred_biomes": ["minecraft:plains", "minecraft:meadow", "minecraft:flower_forest", "minecraft:forest", "minecraft:taiga", "minecraft:snowy_plains"],
+    "temperature_tolerance": { "min": -10, "max": 30 },
+    "avoids": ["minecraft:jungle", "minecraft:swamp"]
+  },
+  "reproduction": {
+    "breeding_season": { "start": 0.1, "end": 0.6 },
+    "litter_size": { "min": 2, "max": 4 },
+    "gestation_ticks": 12000,
+    "maturity_age_ticks": 24000,
+    "food_threshold": 0.7
+  },
+  "social": {
+    "pack_animal": false,
+    "pack_size": { "min": 1, "max": 3 },
+    "territory_radius": 16,
+    "aggression": 0.0
+  },
+  "population": {
+    "base_density": 2.0,
+    "carrying_capacity_per_chunk": 8,
+    "migration_tendency": 0.4
+  }
+}
