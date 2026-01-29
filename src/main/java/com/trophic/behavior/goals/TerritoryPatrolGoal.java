@@ -3,6 +3,7 @@ package com.trophic.behavior.goals;
 import com.trophic.Trophic;
 import com.trophic.behavior.ai.TerritoryManager;
 import com.trophic.behavior.ai.TerritoryManager.Territory;
+import com.trophic.config.TrophicConfig;
 import com.trophic.registry.SpeciesDefinition;
 import com.trophic.registry.SpeciesRegistry;
 import net.minecraft.entity.ai.goal.Goal;
@@ -27,8 +28,6 @@ public class TerritoryPatrolGoal extends Goal {
     private int patrolTimer;
     private int patrolPointIndex;
     
-    private static final int PATROL_POINT_COUNT = 8;
-    private static final int PATROL_DURATION = 100;
 
     public TerritoryPatrolGoal(AnimalEntity animal, double patrolSpeed) {
         this.animal = animal;
@@ -60,12 +59,13 @@ public class TerritoryPatrolGoal extends Goal {
             territory = existing.get();
         }
         
-        return territory != null && animal.getRandom().nextFloat() < 0.05; // 5% chance to start patrol
+        return territory != null && animal.getRandom().nextFloat() < TrophicConfig.get().territory.patrolStartChance;
     }
 
     @Override
     public boolean shouldContinue() {
-        return patrolTimer < PATROL_DURATION * PATROL_POINT_COUNT;
+        TrophicConfig.TerritoryConfig config = TrophicConfig.get().territory;
+        return patrolTimer < config.patrolDuration * config.patrolPointCount;
     }
 
     @Override
@@ -92,7 +92,8 @@ public class TerritoryPatrolGoal extends Goal {
         // Move toward patrol point
         double distanceSq = animal.squaredDistanceTo(patrolTarget);
         
-        if (distanceSq < 4.0 || patrolTimer % PATROL_DURATION == 0) {
+        TrophicConfig.TerritoryConfig config = TrophicConfig.get().territory;
+        if (distanceSq < config.reachedPointDistanceSq || patrolTimer % config.patrolDuration == 0) {
             // Reached point or time to move on
             patrolPointIndex++;
             selectNextPatrolPoint();
@@ -115,8 +116,9 @@ public class TerritoryPatrolGoal extends Goal {
         }
         
         // Calculate point on territory perimeter
-        double angle = (2 * Math.PI * patrolPointIndex) / PATROL_POINT_COUNT;
-        double radius = territory.radius() * 0.8; // Patrol slightly inside boundary
+        TrophicConfig.TerritoryConfig config = TrophicConfig.get().territory;
+        double angle = (2 * Math.PI * patrolPointIndex) / config.patrolPointCount;
+        double radius = territory.radius() * config.patrolRadiusMultiplier;
         
         double x = territory.center().getX() + Math.cos(angle) * radius;
         double z = territory.center().getZ() + Math.sin(angle) * radius;
@@ -136,7 +138,8 @@ public class TerritoryPatrolGoal extends Goal {
      * Finds a valid ground position near the given position.
      */
     private BlockPos findGround(BlockPos pos) {
-        for (int dy = 5; dy >= -5; dy--) {
+        int searchRange = TrophicConfig.get().territory.groundSearchRange;
+        for (int dy = searchRange; dy >= -searchRange; dy--) {
             BlockPos checkPos = pos.add(0, dy, 0);
             if (animal.getEntityWorld().getBlockState(checkPos).isAir() &&
                 !animal.getEntityWorld().getBlockState(checkPos.down()).isAir()) {

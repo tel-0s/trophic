@@ -2,6 +2,7 @@ package com.trophic.behavior.goals;
 
 import com.trophic.Trophic;
 import com.trophic.behavior.EcologicalEntity;
+import com.trophic.config.TrophicConfig;
 import com.trophic.simulation.MigrationPlanner;
 import com.trophic.simulation.MigrationPlanner.MigrationTarget;
 import com.trophic.simulation.SeasonalEffects;
@@ -35,10 +36,6 @@ public class MigrationGoal extends Goal {
     private int migrationTimer;
     private int stuckTimer;
     private Vec3d lastPosition;
-    
-    private static final int MAX_MIGRATION_TIME = 24000; // 20 minutes
-    private static final int STUCK_THRESHOLD = 200; // 10 seconds
-    private static final int CHECK_INTERVAL = 100; // Check conditions every 5 seconds
 
     public MigrationGoal(AnimalEntity animal, double speed) {
         this.animal = animal;
@@ -58,7 +55,9 @@ public class MigrationGoal extends Goal {
         double migrationUrge = SeasonalEffects.getMigrationUrge(speciesId);
         
         // Only migrate if urge is high and random chance
-        if (migrationUrge < 0.3 || animal.getRandom().nextFloat() > 0.01) {
+        TrophicConfig.MigrationConfig migrationConfig = TrophicConfig.get().migration;
+        if (migrationUrge < migrationConfig.migrationUrgeThreshold || 
+            animal.getRandom().nextFloat() > migrationConfig.migrationChance) {
             return false;
         }
         
@@ -72,7 +71,7 @@ public class MigrationGoal extends Goal {
         }
         
         target = plannedTarget.get();
-        return target.suitabilityScore() > 0.5;
+        return target.suitabilityScore() > TrophicConfig.get().migration.suitabilityThreshold;
     }
 
     @Override
@@ -81,12 +80,12 @@ public class MigrationGoal extends Goal {
             return false;
         }
         
-        if (migrationTimer > MAX_MIGRATION_TIME) {
+        if (migrationTimer > TrophicConfig.get().migration.maxMigrationTime) {
             return false; // Give up after too long
         }
         
         // Check if stuck
-        if (stuckTimer > STUCK_THRESHOLD) {
+        if (stuckTimer > TrophicConfig.get().migration.stuckThreshold) {
             return false;
         }
         
@@ -97,7 +96,7 @@ public class MigrationGoal extends Goal {
                 target.destination().getZ() + 0.5
         );
         
-        return distanceSq > 64; // More than 8 blocks away
+        return distanceSq > TrophicConfig.get().migration.arrivedDistanceSq;
     }
 
     @Override
@@ -121,7 +120,7 @@ public class MigrationGoal extends Goal {
                     target.destination().getZ() + 0.5
             );
             
-            if (distanceSq < 64) {
+            if (distanceSq < TrophicConfig.get().migration.arrivedDistanceSq) {
                 // Migration successful - update home position to new location
                 if (animal instanceof EcologicalEntity eco) {
                     eco.trophic_setHomePos(target.destination());
@@ -168,7 +167,7 @@ public class MigrationGoal extends Goal {
         lastPosition = currentPos;
         
         // Periodically recalculate path
-        if (migrationTimer % CHECK_INTERVAL == 0) {
+        if (migrationTimer % TrophicConfig.get().migration.checkInterval == 0) {
             // Recalculate if path is blocked
             if (!animal.getNavigation().isFollowingPath()) {
                 // Try to find intermediate waypoint
@@ -198,13 +197,14 @@ public class MigrationGoal extends Goal {
         double dz = target.destination().getZ() - animal.getZ();
         double distance = Math.sqrt(dx * dx + dz * dz);
         
-        if (distance < 16) {
+        if (distance < TrophicConfig.get().migration.closeEnoughDistance) {
             return target.destination();
         }
         
         // Try to find a reachable point in the general direction
-        dx = dx / distance * 32; // 32 blocks toward target
-        dz = dz / distance * 32;
+        int waypointDist = TrophicConfig.get().migration.waypointDistance;
+        dx = dx / distance * waypointDist;
+        dz = dz / distance * waypointDist;
         
         BlockPos candidate = new BlockPos(
                 (int)(animal.getX() + dx),
@@ -214,7 +214,8 @@ public class MigrationGoal extends Goal {
         
         // Find valid ground position
         if (animal.getEntityWorld() instanceof ServerWorld world) {
-            for (int dy = 5; dy >= -5; dy--) {
+            int groundSearch = TrophicConfig.get().migration.groundSearchRange;
+            for (int dy = groundSearch; dy >= -groundSearch; dy--) {
                 BlockPos checkPos = candidate.add(0, dy, 0);
                 if (world.getBlockState(checkPos).isAir() &&
                     !world.getBlockState(checkPos.down()).isAir()) {

@@ -2,6 +2,7 @@ package com.trophic.behavior.goals;
 
 import com.trophic.Trophic;
 import com.trophic.behavior.EcologicalEntity;
+import com.trophic.config.TrophicConfig;
 import com.trophic.ecosystem.EcosystemManager;
 import com.trophic.ecosystem.RegionEcosystem;
 import com.trophic.registry.DietType;
@@ -54,9 +55,6 @@ public class ForageGoal extends Goal {
             Blocks.LARGE_FERN
     );
     
-    private static final int SEARCH_RANGE = 10;
-    private static final int FORAGE_TIME = 40; // 2 seconds to eat
-    private static final int NUTRITION_VALUE = 25;
     
     private final PathAwareEntity entity;
     private final double speed;
@@ -99,7 +97,7 @@ public class ForageGoal extends Goal {
         // Find food source
         targetPos = findFoodSource();
         if (targetPos == null) {
-            searchCooldown = 100; // Wait 5 seconds before searching again
+            searchCooldown = TrophicConfig.get().forage.searchCooldown;
             return false;
         }
         
@@ -147,7 +145,7 @@ public class ForageGoal extends Goal {
                 targetPos.getZ() + 0.5
         );
         
-        if (distanceSq > 4.0) {
+        if (distanceSq > TrophicConfig.get().forage.eatDistanceSq) {
             // Move toward food
             entity.getNavigation().startMovingTo(
                     targetPos.getX() + 0.5,
@@ -166,7 +164,7 @@ public class ForageGoal extends Goal {
             
             forageTimer++;
             
-            if (forageTimer >= FORAGE_TIME) {
+            if (forageTimer >= TrophicConfig.get().forage.forageTime) {
                 consumeFood();
             }
         }
@@ -189,10 +187,12 @@ public class ForageGoal extends Goal {
     private BlockPos findFoodOfType(World world, BlockPos entityPos, Set<Block> validBlocks) {
         BlockPos bestPos = null;
         double bestDistanceSq = Double.MAX_VALUE;
+        int searchRange = TrophicConfig.get().forage.searchRange;
         
-        for (int x = -SEARCH_RANGE; x <= SEARCH_RANGE; x++) {
-            for (int z = -SEARCH_RANGE; z <= SEARCH_RANGE; z++) {
-                for (int y = -3; y <= 3; y++) {
+        int verticalRange = TrophicConfig.get().forage.verticalSearchRange;
+        for (int x = -searchRange; x <= searchRange; x++) {
+            for (int z = -searchRange; z <= searchRange; z++) {
+                for (int y = -verticalRange; y <= verticalRange; y++) {
                     BlockPos pos = entityPos.add(x, y, z);
                     BlockState state = world.getBlockState(pos);
                     
@@ -235,7 +235,7 @@ public class ForageGoal extends Goal {
         
         // Feed the entity
         if (entity instanceof EcologicalEntity eco) {
-            eco.trophic_feed(NUTRITION_VALUE);
+            eco.trophic_feed(TrophicConfig.get().forage.nutritionValue);
         }
         
         // Track grazing in ecosystem

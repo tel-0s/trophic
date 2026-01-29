@@ -1,5 +1,6 @@
 package com.trophic;
 
+import com.trophic.config.TrophicConfig;
 import com.trophic.ecosystem.EcosystemManager;
 import com.trophic.population.PopulationTracker;
 import com.trophic.population.SpawnController;
@@ -36,6 +37,10 @@ public class Trophic implements ModInitializer {
     public void onInitialize() {
         instance = this;
         LOGGER.info("Initializing Trophic - Ecological Overhaul");
+
+        // Load configuration
+        TrophicConfig.load();
+        LOGGER.info("Loaded Trophic configuration");
 
         // Initialize core systems
         speciesRegistry = new SpeciesRegistry();

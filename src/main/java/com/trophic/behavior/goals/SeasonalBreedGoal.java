@@ -2,6 +2,7 @@ package com.trophic.behavior.goals;
 
 import com.trophic.Trophic;
 import com.trophic.behavior.EcologicalEntity;
+import com.trophic.config.TrophicConfig;
 import com.trophic.registry.SpeciesDefinition;
 import com.trophic.registry.SpeciesRegistry;
 import com.trophic.simulation.SeasonManager;
@@ -34,9 +35,6 @@ public class SeasonalBreedGoal extends Goal {
     
     private AnimalEntity mate;
     private int breedTimer;
-    
-    private static final int BREED_DURATION = 60;
-    private static final int COOLDOWN_AFTER_BREEDING = 24000; // 1 in-game day (20 real minutes)
 
     public SeasonalBreedGoal(AnimalEntity animal, double speed) {
         this.animal = animal;
@@ -106,7 +104,7 @@ public class SeasonalBreedGoal extends Goal {
             return false;
         }
         
-        return breedTimer < BREED_DURATION;
+        return breedTimer < TrophicConfig.get().breeding.breedDuration;
     }
 
     @Override
@@ -132,13 +130,13 @@ public class SeasonalBreedGoal extends Goal {
         
         // Move toward mate
         double distanceSq = animal.squaredDistanceTo(mate);
-        if (distanceSq > 9.0) {
+        if (distanceSq > TrophicConfig.get().breeding.breedingDistanceSq) {
             animal.getNavigation().startMovingTo(mate, speed);
         } else {
             animal.getNavigation().stop();
             
             // Close enough - breed
-            if (breedTimer >= BREED_DURATION) {
+            if (breedTimer >= TrophicConfig.get().breeding.breedDuration) {
                 breed();
             }
         }
@@ -148,7 +146,7 @@ public class SeasonalBreedGoal extends Goal {
      * Finds a suitable mate nearby.
      */
     private AnimalEntity findMate() {
-        Box searchBox = animal.getBoundingBox().expand(16.0);
+        Box searchBox = animal.getBoundingBox().expand(TrophicConfig.get().breeding.mateSearchRange);
         List<AnimalEntity> candidates = animal.getEntityWorld().getEntitiesByClass(
                 AnimalEntity.class,
                 searchBox,
@@ -207,7 +205,8 @@ public class SeasonalBreedGoal extends Goal {
         }
         
         // Count prey in a large area
-        Box searchBox = animal.getBoundingBox().expand(48.0);
+        TrophicConfig.BreedingConfig breedConfig = TrophicConfig.get().breeding;
+        Box searchBox = animal.getBoundingBox().expand(breedConfig.preySearchRadius);
         int preyCount = 0;
         
         for (Identifier preyId : preyIds) {
@@ -228,10 +227,9 @@ public class SeasonalBreedGoal extends Goal {
                 other -> other.isAlive() && other.getType() == animal.getType()
         ).size();
         
-        // Require at least 4 prey per predator to breed
+        // Require minimum prey per predator to breed
         // This prevents predator overpopulation
-        int requiredPreyRatio = 4;
-        int minPreyForBreeding = predatorCount * requiredPreyRatio;
+        int minPreyForBreeding = predatorCount * breedConfig.requiredPreyRatio;
         
         if (preyCount < minPreyForBreeding) {
             Trophic.LOGGER.debug("{} cannot breed: only {} prey for {} predators (need {})",
@@ -256,11 +254,11 @@ public class SeasonalBreedGoal extends Goal {
             return true;
         }
         
-        // Check a 3x3 chunk area (48 blocks radius roughly)
-        // This gives us 9 chunks worth of capacity
-        int areaCapacity = capacityPerChunk * 9;
+        // Check chunks in the area for carrying capacity
+        TrophicConfig.BreedingConfig breedConfig = TrophicConfig.get().breeding;
+        int areaCapacity = capacityPerChunk * breedConfig.carryingCapacityChunks;
         
-        Box searchBox = animal.getBoundingBox().expand(48.0);
+        Box searchBox = animal.getBoundingBox().expand(breedConfig.preySearchRadius);
         int currentPopulation = animal.getEntityWorld().getEntitiesByClass(
                 animal.getClass(),
                 searchBox,
@@ -312,17 +310,18 @@ public class SeasonalBreedGoal extends Goal {
         }
         
         // Set breeding cooldown (longer for predators)
-        int cooldown = COOLDOWN_AFTER_BREEDING;
+        TrophicConfig.BreedingConfig breedConfig = TrophicConfig.get().breeding;
+        int cooldown = breedConfig.cooldownTicks;
         if (species != null && species.getDiet() != null && species.getDiet().type().canHunt()) {
-            cooldown = COOLDOWN_AFTER_BREEDING * 3; // 15 minutes for predators
+            cooldown = breedConfig.cooldownTicks * breedConfig.predatorCooldownMultiplier;
         }
         animal.setBreedingAge(cooldown);
         mate.setBreedingAge(cooldown);
         
         // Reduce hunger from breeding effort (more for predators)
-        double hungerCost = 0.3;
+        double hungerCost = breedConfig.herbivoreHungerCost;
         if (species != null && species.getDiet() != null && species.getDiet().type().canHunt()) {
-            hungerCost = 0.5; // Breeding is more taxing for predators
+            hungerCost = breedConfig.predatorHungerCost;
         }
         if (animal instanceof EcologicalEntity eco) {
             eco.trophic_setHunger(eco.trophic_getHunger() - hungerCost);

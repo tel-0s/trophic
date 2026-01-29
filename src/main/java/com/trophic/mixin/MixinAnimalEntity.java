@@ -2,6 +2,7 @@ package com.trophic.mixin;
 
 import com.trophic.Trophic;
 import com.trophic.behavior.EcologicalEntity;
+import com.trophic.config.TrophicConfig;
 import com.trophic.registry.SpeciesDefinition;
 import com.trophic.registry.SpeciesRegistry;
 import net.minecraft.entity.EntityType;
@@ -41,9 +42,6 @@ public abstract class MixinAnimalEntity extends PassiveEntity implements Ecologi
     
     @Unique
     private BlockPos trophic_homePos = null;
-    
-    @Unique
-    private static final double DEFAULT_HOME_RANGE = 48.0;
 
     protected MixinAnimalEntity(EntityType<? extends PassiveEntity> entityType, World world) {
         super(entityType, world);
@@ -92,20 +90,19 @@ public abstract class MixinAnimalEntity extends PassiveEntity implements Ecologi
             return;
         }
         
-        // Decrease hunger over time (metabolic cost)
-        // Base rate: lose 0.0008 hunger per second (20 ticks)
-        // This means ~8-10 real minutes to get hungry after eating
-        // Animals should need to eat 2-3 times per in-game day
-        double hungerDecayRate = 0.0008 / 20.0;
+        TrophicConfig.HungerConfig config = TrophicConfig.get().hunger;
         
-        // Minimal trophic scaling - predators shouldn't starve faster
-        hungerDecayRate *= 1.0 + (species.getTrophicLevel() - 1) * 0.02;
+        // Decrease hunger over time (metabolic cost)
+        double hungerDecayRate = config.decayRatePerSecond / 20.0;
+        
+        // Trophic level scaling
+        hungerDecayRate *= 1.0 + (species.getTrophicLevel() - 1) * config.trophicLevelScaling;
         
         trophic_hunger = Math.max(0.0, trophic_hunger - hungerDecayRate);
         
         // Apply starvation damage if hunger is critically low
-        // Only at 5% hunger, and damage every 10 seconds to give time to find food
-        if (trophic_hunger <= 0.05 && this.getEntityWorld().getTime() % 200 == 0) {
+        if (trophic_hunger <= config.starvationDamageThreshold && 
+            this.getEntityWorld().getTime() % config.starvationDamageInterval == 0) {
             if (this.getEntityWorld() instanceof ServerWorld serverWorld) {
                 ((AnimalEntity)(Object)this).damage(serverWorld, this.getDamageSources().starve(), 1.0f);
             }
@@ -169,13 +166,12 @@ public abstract class MixinAnimalEntity extends PassiveEntity implements Ecologi
 
     @Override
     public boolean trophic_isHungry() {
-        // Hungry below 60% - triggers hunting/foraging behavior
-        return trophic_hunger < 0.6;
+        return trophic_hunger < TrophicConfig.get().hunger.hungryThreshold;
     }
 
     @Override
     public boolean trophic_isStarving() {
-        return trophic_hunger < 0.2;
+        return trophic_hunger < TrophicConfig.get().hunger.starvingThreshold;
     }
 
     @Override
@@ -211,6 +207,6 @@ public abstract class MixinAnimalEntity extends PassiveEntity implements Ecologi
     @Override
     public double trophic_getHomeRange() {
         // Could be species-specific in the future
-        return DEFAULT_HOME_RANGE;
+        return TrophicConfig.get().homeRange.defaultRange;
     }
 }

@@ -3,6 +3,7 @@ package com.trophic.behavior.goals;
 import com.trophic.Trophic;
 import com.trophic.behavior.EcologicalEntity;
 import com.trophic.behavior.ai.PackCoordinator;
+import com.trophic.config.TrophicConfig;
 import com.trophic.registry.SpeciesDefinition;
 import com.trophic.registry.SpeciesRegistry;
 import net.minecraft.entity.ai.goal.Goal;
@@ -26,13 +27,9 @@ public class PackBehaviorGoal extends Goal {
     
     private AnimalEntity packLeader;
     private int updateTimer;
-    
-    private static final int UPDATE_INTERVAL = 20;
-    private static final double FOLLOW_START_DISTANCE = 32.0; // Only regroup when VERY far
-    private static final double FOLLOW_STOP_DISTANCE = 8.0;
 
     public PackBehaviorGoal(AnimalEntity animal, double followSpeed) {
-        this(animal, followSpeed, 32.0);
+        this(animal, followSpeed, TrophicConfig.get().pack.maxDistanceFromPack);
     }
 
     public PackBehaviorGoal(AnimalEntity animal, double followSpeed, double maxDistanceFromPack) {
@@ -75,8 +72,9 @@ public class PackBehaviorGoal extends Goal {
             return false;
         }
         
+        TrophicConfig.PackConfig packConfig = TrophicConfig.get().pack;
         double distanceSq = animal.squaredDistanceTo(packLeader);
-        return distanceSq > FOLLOW_START_DISTANCE * FOLLOW_START_DISTANCE;
+        return distanceSq > packConfig.followStartDistance * packConfig.followStartDistance;
     }
 
     @Override
@@ -86,8 +84,9 @@ public class PackBehaviorGoal extends Goal {
         }
         
         // Stop following if close enough
+        TrophicConfig.PackConfig packConfig = TrophicConfig.get().pack;
         double distanceSq = animal.squaredDistanceTo(packLeader);
-        return distanceSq > FOLLOW_STOP_DISTANCE * FOLLOW_STOP_DISTANCE;
+        return distanceSq > packConfig.followStopDistance * packConfig.followStopDistance;
     }
 
     @Override
@@ -113,13 +112,14 @@ public class PackBehaviorGoal extends Goal {
         animal.getLookControl().lookAt(packLeader, 10.0F, animal.getMaxLookPitchChange());
         
         // Recalculate path periodically
-        if (updateTimer % UPDATE_INTERVAL == 0) {
+        if (updateTimer % TrophicConfig.get().pack.updateInterval == 0) {
             // Calculate target position - move toward pack center, not directly to leader
             Vec3d packCenter = PackCoordinator.getPackCenter(animal);
             
             // Add some randomization to avoid all animals bunching up
-            double offsetX = (animal.getRandom().nextDouble() - 0.5) * 4.0;
-            double offsetZ = (animal.getRandom().nextDouble() - 0.5) * 4.0;
+            double spreadOffset = TrophicConfig.get().pack.spreadOffset;
+            double offsetX = (animal.getRandom().nextDouble() - 0.5) * spreadOffset;
+            double offsetZ = (animal.getRandom().nextDouble() - 0.5) * spreadOffset;
             
             animal.getNavigation().startMovingTo(
                     packCenter.x + offsetX,

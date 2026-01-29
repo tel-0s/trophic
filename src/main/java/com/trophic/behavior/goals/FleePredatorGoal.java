@@ -3,6 +3,7 @@ package com.trophic.behavior.goals;
 import com.trophic.Trophic;
 import com.trophic.behavior.EcologicalEntity;
 import com.trophic.behavior.ai.PredatorAwareness;
+import com.trophic.config.TrophicConfig;
 import com.trophic.registry.SpeciesRegistry;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
@@ -33,12 +34,9 @@ public class FleePredatorGoal extends Goal {
     private LivingEntity predator;
     private Vec3d fleeTarget;
     private int fleeTimer;
-    
-    private static final int MAX_FLEE_TIME = 200; // 10 seconds max flee
-    private static final int RECALCULATE_INTERVAL = 10;
 
     public FleePredatorGoal(AnimalEntity prey, double fleeSpeed) {
-        this(prey, fleeSpeed, 16.0);
+        this(prey, fleeSpeed, TrophicConfig.get().flee.detectionRange);
     }
 
     public FleePredatorGoal(AnimalEntity prey, double fleeSpeed, double detectionRange) {
@@ -77,7 +75,7 @@ public class FleePredatorGoal extends Goal {
             return false;
         }
         
-        if (fleeTimer > MAX_FLEE_TIME) {
+        if (fleeTimer > TrophicConfig.get().flee.maxFleeTime) {
             return false;
         }
         
@@ -86,7 +84,8 @@ public class FleePredatorGoal extends Goal {
                 Registries.ENTITY_TYPE.getId(predator.getType())
         );
         
-        return prey.squaredDistanceTo(predator) < safeDistance * safeDistance * 1.5;
+        double multiplier = TrophicConfig.get().flee.safeDistanceMultiplier;
+        return prey.squaredDistanceTo(predator) < safeDistance * safeDistance * multiplier;
     }
 
     @Override
@@ -110,7 +109,7 @@ public class FleePredatorGoal extends Goal {
         fleeTimer++;
         
         // Recalculate flee direction periodically
-        if (fleeTimer % RECALCULATE_INTERVAL == 0) {
+        if (fleeTimer % TrophicConfig.get().flee.recalculateInterval == 0) {
             fleeTarget = calculateFleeTarget();
         }
         
@@ -129,9 +128,12 @@ public class FleePredatorGoal extends Goal {
             return null;
         }
         
+        TrophicConfig.FleeConfig fleeConfig = TrophicConfig.get().flee;
+        TrophicConfig.HomeRangeConfig homeConfig = TrophicConfig.get().homeRange;
+        
         // Get home position and range
         BlockPos homePos = null;
-        double homeRange = 48.0;
+        double homeRange = homeConfig.defaultRange;
         if (prey instanceof EcologicalEntity eco) {
             homePos = eco.trophic_getHomePos();
             homeRange = eco.trophic_getHomeRange();
@@ -151,8 +153,9 @@ public class FleePredatorGoal extends Goal {
         }
         
         // Normalize and scale
-        dx = dx / length * 16.0; // Flee 16 blocks away
-        dz = dz / length * 16.0;
+        double fleeDistance = fleeConfig.fleeDistance;
+        dx = dx / length * fleeDistance;
+        dz = dz / length * fleeDistance;
         
         // Try different angles, preferring directions that stay within home range
         Vec3d bestTarget = null;
@@ -190,12 +193,12 @@ public class FleePredatorGoal extends Goal {
                 
                 // If this would take us outside home range, heavily penalize
                 if (Math.sqrt(distFromHome) > homeRange) {
-                    distFromHome *= 10; // Strong penalty for leaving home range
+                    distFromHome *= homeConfig.fleeOutOfRangePenalty;
                 }
             }
             
             // Score: want high distance from predator, low distance from home
-            double score = distFromHome - distFromPredator * 0.5;
+            double score = distFromHome - distFromPredator * fleeConfig.predatorDistanceWeight;
             
             if (score < bestScore) {
                 bestScore = score;

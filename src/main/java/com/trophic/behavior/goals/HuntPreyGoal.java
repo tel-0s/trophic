@@ -19,6 +19,7 @@ import net.minecraft.util.math.ChunkPos;
 
 import java.util.EnumSet;
 
+import com.trophic.config.TrophicConfig;
 import net.minecraft.util.math.Vec3d;
 
 /**
@@ -44,11 +45,6 @@ public class HuntPreyGoal extends Goal {
     // Target commitment - prevents oscillating between different prey groups
     private Vec3d committedDirection;
     private int commitmentTimer;
-    private static final int COMMITMENT_DURATION = 400; // 20 seconds of directional commitment
-    private static final double DIRECTION_PREFERENCE = 0.7; // How much to prefer targets in committed direction
-    
-    private static final int MAX_HUNT_TIME = 600; // 30 seconds max chase
-    private static final int RECALCULATE_PATH_INTERVAL = 20;
     
     public enum HuntPhase {
         SEARCHING,
@@ -57,7 +53,9 @@ public class HuntPreyGoal extends Goal {
     }
 
     public HuntPreyGoal(PathAwareEntity predator, double chaseSpeed) {
-        this(predator, chaseSpeed, chaseSpeed * 0.6, 32.0);
+        this(predator, chaseSpeed, 
+             chaseSpeed * TrophicConfig.get().hunt.stalkSpeedMultiplier, 
+             TrophicConfig.get().hunt.defaultSearchRange);
     }
 
     public HuntPreyGoal(PathAwareEntity predator, double chaseSpeed, double stalkSpeed, double searchRange) {
@@ -137,10 +135,11 @@ public class HuntPreyGoal extends Goal {
                 double alignment = committedDirection.dotProduct(toTarget);
                 
                 // Penalize targets in opposite direction
+                TrophicConfig.HuntConfig huntConfig = TrophicConfig.get().hunt;
                 if (alignment < 0) {
-                    baseScore *= (1.0 + Math.abs(alignment) * 2.0); // Up to 3x penalty for opposite direction
+                    baseScore *= (1.0 + Math.abs(alignment) * huntConfig.oppositeDirectionPenalty);
                 } else {
-                    baseScore *= (1.0 - alignment * DIRECTION_PREFERENCE); // Up to 30% bonus for same direction
+                    baseScore *= (1.0 - alignment * huntConfig.directionPreference);
                 }
             }
             
@@ -159,12 +158,14 @@ public class HuntPreyGoal extends Goal {
             return false;
         }
         
-        if (huntTimer > MAX_HUNT_TIME) {
+        if (huntTimer > TrophicConfig.get().hunt.maxHuntTime) {
             return false; // Give up after too long
         }
         
         // Continue if prey is still in range (extended during chase)
-        double maxRange = phase == HuntPhase.CHASING ? searchRange * 1.5 : searchRange;
+        double maxRange = phase == HuntPhase.CHASING 
+                ? searchRange * TrophicConfig.get().hunt.chaseRangeMultiplier 
+                : searchRange;
         return predator.squaredDistanceTo(targetPrey) < maxRange * maxRange;
     }
 
@@ -180,7 +181,7 @@ public class HuntPreyGoal extends Goal {
                     0,
                     targetPrey.getZ() - predator.getZ()
             ).normalize();
-            commitmentTimer = COMMITMENT_DURATION;
+            commitmentTimer = TrophicConfig.get().hunt.commitmentDuration;
         }
         
         Trophic.LOGGER.debug("{} started hunting {}", 
@@ -219,12 +220,12 @@ public class HuntPreyGoal extends Goal {
 
     private void tickStalking(double distanceSq) {
         // Move slowly toward prey
-        if (huntTimer % RECALCULATE_PATH_INTERVAL == 0) {
+        if (huntTimer % TrophicConfig.get().hunt.recalculatePathInterval == 0) {
             predator.getNavigation().startMovingTo(targetPrey, stalkSpeed);
         }
         
         // Transition to chasing if prey notices us or we're close enough
-        if (distanceSq < 64.0) { // Within 8 blocks
+        if (distanceSq < TrophicConfig.get().hunt.stalkToChaseDistanceSq) {
             phase = HuntPhase.CHASING;
             Trophic.LOGGER.debug("{} transitioning to chase phase", 
                     Registries.ENTITY_TYPE.getId(predator.getType()));
@@ -240,12 +241,12 @@ public class HuntPreyGoal extends Goal {
 
     private void tickChasing(double distanceSq) {
         // Chase at full speed
-        if (huntTimer % (RECALCULATE_PATH_INTERVAL / 2) == 0) {
+        if (huntTimer % (TrophicConfig.get().hunt.recalculatePathInterval / 2) == 0) {
             predator.getNavigation().startMovingTo(targetPrey, chaseSpeed);
         }
         
         // Check for successful catch
-        if (distanceSq < 4.0) { // Within 2 blocks
+        if (distanceSq < TrophicConfig.get().hunt.attackDistanceSq) {
             attemptKill();
         }
     }
