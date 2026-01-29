@@ -1,6 +1,7 @@
 package com.trophic.behavior.goals;
 
 import com.trophic.Trophic;
+import com.trophic.behavior.EcologicalEntity;
 import com.trophic.simulation.MigrationPlanner;
 import com.trophic.simulation.MigrationPlanner.MigrationTarget;
 import com.trophic.simulation.SeasonalEffects;
@@ -22,6 +23,9 @@ import java.util.Optional;
  * - Seasonal changes
  * - Food scarcity
  * - Population pressure
+ * 
+ * Upon successful migration, the animal's home position is updated
+ * to the new location.
  */
 public class MigrationGoal extends Goal {
     private final AnimalEntity animal;
@@ -118,8 +122,16 @@ public class MigrationGoal extends Goal {
             );
             
             if (distanceSq < 64) {
-                Trophic.LOGGER.info("{} completed migration successfully",
-                        Registries.ENTITY_TYPE.getId(animal.getType()));
+                // Migration successful - update home position to new location
+                if (animal instanceof EcologicalEntity eco) {
+                    eco.trophic_setHomePos(target.destination());
+                    Trophic.LOGGER.info("{} completed migration successfully, new home: {}",
+                            Registries.ENTITY_TYPE.getId(animal.getType()),
+                            target.destination());
+                } else {
+                    Trophic.LOGGER.info("{} completed migration successfully",
+                            Registries.ENTITY_TYPE.getId(animal.getType()));
+                }
             } else {
                 Trophic.LOGGER.info("{} abandoned migration",
                         Registries.ENTITY_TYPE.getId(animal.getType()));

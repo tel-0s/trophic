@@ -12,6 +12,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -37,6 +38,12 @@ public abstract class MixinAnimalEntity extends PassiveEntity implements Ecologi
     
     @Unique
     private boolean trophic_initialized = false;
+    
+    @Unique
+    private BlockPos trophic_homePos = null;
+    
+    @Unique
+    private static final double DEFAULT_HOME_RANGE = 48.0;
 
     protected MixinAnimalEntity(EntityType<? extends PassiveEntity> entityType, World world) {
         super(entityType, world);
@@ -68,6 +75,11 @@ public abstract class MixinAnimalEntity extends PassiveEntity implements Ecologi
         // Initialize with random hunger
         trophic_hunger = 0.5 + this.random.nextDouble() * 0.5;
         trophic_lastMealTick = this.getEntityWorld().getTime();
+        
+        // Set home position to spawn location
+        if (trophic_homePos == null) {
+            trophic_homePos = this.getBlockPos();
+        }
     }
 
     @Unique
@@ -106,6 +118,13 @@ public abstract class MixinAnimalEntity extends PassiveEntity implements Ecologi
         trophicView.putDouble("hunger", trophic_hunger);
         trophicView.putLong("lastMeal", trophic_lastMealTick);
         trophicView.putInt("huntCooldown", trophic_huntCooldown);
+        
+        // Save home position
+        if (trophic_homePos != null) {
+            trophicView.putInt("homeX", trophic_homePos.getX());
+            trophicView.putInt("homeY", trophic_homePos.getY());
+            trophicView.putInt("homeZ", trophic_homePos.getZ());
+        }
     }
 
     @Inject(method = "readCustomData", at = @At("TAIL"))
@@ -114,6 +133,15 @@ public abstract class MixinAnimalEntity extends PassiveEntity implements Ecologi
             trophic_hunger = trophicView.getDouble("hunger", 1.0);
             trophic_lastMealTick = trophicView.getLong("lastMeal", 0L);
             trophic_huntCooldown = trophicView.getInt("huntCooldown", 0);
+            
+            // Load home position
+            int homeX = trophicView.getInt("homeX", Integer.MIN_VALUE);
+            if (homeX != Integer.MIN_VALUE) {
+                int homeY = trophicView.getInt("homeY", 64);
+                int homeZ = trophicView.getInt("homeZ", 0);
+                trophic_homePos = new BlockPos(homeX, homeY, homeZ);
+            }
+            
             trophic_initialized = true;
         });
     }
@@ -168,5 +196,21 @@ public abstract class MixinAnimalEntity extends PassiveEntity implements Ecologi
     @Override
     public long trophic_getLastMealTick() {
         return trophic_lastMealTick;
+    }
+    
+    @Override
+    public BlockPos trophic_getHomePos() {
+        return trophic_homePos;
+    }
+    
+    @Override
+    public void trophic_setHomePos(BlockPos pos) {
+        this.trophic_homePos = pos;
+    }
+    
+    @Override
+    public double trophic_getHomeRange() {
+        // Could be species-specific in the future
+        return DEFAULT_HOME_RANGE;
     }
 }

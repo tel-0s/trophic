@@ -1,5 +1,7 @@
 package com.trophic.behavior;
 
+import net.minecraft.util.math.BlockPos;
+
 /**
  * Interface for entities that participate in the ecological simulation.
  * Implemented by AnimalEntity via mixin.
@@ -53,4 +55,21 @@ public interface EcologicalEntity {
      * Gets the world time when the entity last ate.
      */
     long trophic_getLastMealTick();
+    
+    /**
+     * Gets the entity's home position (where it spawned or settled).
+     * Used to limit flee distance and encourage local populations.
+     */
+    BlockPos trophic_getHomePos();
+    
+    /**
+     * Sets the entity's home position.
+     */
+    void trophic_setHomePos(BlockPos pos);
+    
+    /**
+     * Gets the maximum distance this entity will stray from home.
+     * Default is typically 48-64 blocks.
+     */
+    double trophic_getHomeRange();
 }

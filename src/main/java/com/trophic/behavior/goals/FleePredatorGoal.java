@@ -1,6 +1,7 @@
 package com.trophic.behavior.goals;
 
 import com.trophic.Trophic;
+import com.trophic.behavior.EcologicalEntity;
 import com.trophic.behavior.ai.PredatorAwareness;
 import com.trophic.registry.SpeciesRegistry;
 import net.minecraft.entity.LivingEntity;
@@ -21,8 +22,8 @@ import java.util.Set;
  * Features:
  * - Scans for predators based on species registry
  * - Flees in the opposite direction
+ * - Respects home range to prevent emergent migration
  * - Higher priority when predator is close
- * - Integrates with herd behavior (future)
  */
 public class FleePredatorGoal extends Goal {
     private final AnimalEntity prey;
@@ -121,11 +122,19 @@ public class FleePredatorGoal extends Goal {
     }
 
     /**
-     * Calculates the best flee target - away from the predator.
+     * Calculates the best flee target - away from the predator but within home range.
      */
     private Vec3d calculateFleeTarget() {
         if (predator == null) {
             return null;
+        }
+        
+        // Get home position and range
+        BlockPos homePos = null;
+        double homeRange = 48.0;
+        if (prey instanceof EcologicalEntity eco) {
+            homePos = eco.trophic_getHomePos();
+            homeRange = eco.trophic_getHomeRange();
         }
         
         // Calculate direction away from predator
@@ -145,46 +154,56 @@ public class FleePredatorGoal extends Goal {
         dx = dx / length * 16.0; // Flee 16 blocks away
         dz = dz / length * 16.0;
         
-        // Find a valid position in that direction
-        Vec3d fleeDirection = new Vec3d(
-                prey.getX() + dx,
-                prey.getY(),
-                prey.getZ() + dz
-        );
+        // Try different angles, preferring directions that stay within home range
+        Vec3d bestTarget = null;
+        double bestScore = Double.MAX_VALUE;
         
-        // Try to find a path to the flee target
-        Path path = prey.getNavigation().findPathTo(
-                new BlockPos((int) fleeDirection.x, (int) fleeDirection.y, (int) fleeDirection.z),
-                0
-        );
-        
-        if (path != null) {
-            return fleeDirection;
-        }
-        
-        // Try alternative directions if direct path is blocked
         for (int i = 0; i < 8; i++) {
             double angle = i * Math.PI / 4;
             double rotatedDx = dx * Math.cos(angle) - dz * Math.sin(angle);
             double rotatedDz = dx * Math.sin(angle) + dz * Math.cos(angle);
             
-            Vec3d altTarget = new Vec3d(
+            Vec3d target = new Vec3d(
                     prey.getX() + rotatedDx,
                     prey.getY(),
                     prey.getZ() + rotatedDz
             );
             
-            path = prey.getNavigation().findPathTo(
-                    new BlockPos((int) altTarget.x, (int) altTarget.y, (int) altTarget.z),
+            // Check if we can path there
+            Path path = prey.getNavigation().findPathTo(
+                    new BlockPos((int) target.x, (int) target.y, (int) target.z),
                     0
             );
             
-            if (path != null) {
-                return altTarget;
+            if (path == null) {
+                continue;
+            }
+            
+            // Score this target - lower is better
+            // Primary: distance from predator (want to maximize)
+            // Secondary: distance from home (want to minimize)
+            double distFromPredator = target.squaredDistanceTo(predator.getX(), predator.getY(), predator.getZ());
+            double distFromHome = 0;
+            
+            if (homePos != null) {
+                distFromHome = target.squaredDistanceTo(homePos.getX(), homePos.getY(), homePos.getZ());
+                
+                // If this would take us outside home range, heavily penalize
+                if (Math.sqrt(distFromHome) > homeRange) {
+                    distFromHome *= 10; // Strong penalty for leaving home range
+                }
+            }
+            
+            // Score: want high distance from predator, low distance from home
+            double score = distFromHome - distFromPredator * 0.5;
+            
+            if (score < bestScore) {
+                bestScore = score;
+                bestTarget = target;
             }
         }
         
-        return null;
+        return bestTarget;
     }
 
     /**
